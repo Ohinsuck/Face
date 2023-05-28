@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="face-api.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  </head>
+<body>
+    <div style="display: flex;">
+        <div>
+            <input type="file" accept="image/*" onchange="loadImage1(event)"><br>
+            <img id="output1" width="200">
+        </div>
+
+        <div>
+            <input type="file" accept="image/*" onchange="loadImage2(event)"><br>
+            <img id="output2" width="200">
+        </div>
+    </div>
+    <div class="row">
+        <button onclick="updateResult()">Click me</button>
+        <label for="distance">Distance:</label>
+        <input disabled value="-" id="distance" type="text" class="bold">
+    </div>
+    <script>
+        faceapi.nets.faceRecognitionNet.loadFromUri('models');
+        let image1, image2;
+        function loadImage1(event) {
+            image1 = document.getElementById('output1');
+            image1.src = URL.createObjectURL(event.target.files[0]);
+        };
+        function loadImage2(event) {
+            image2 = document.getElementById('output2');
+            image2.src = URL.createObjectURL(event.target.files[0]);
+        };
+        async  function updateResult() {
+            const threshold = 0.6
+            let descriptors = { desc1: null, desc2: null }
+
+            descriptors[`desc1`] = await faceapi.computeFaceDescriptor(image1);
+            descriptors[`desc2`] = await faceapi.computeFaceDescriptor(image2);
+            const distance = faceapi.utils.round(
+                await faceapi.euclideanDistance(descriptors.desc1, descriptors.desc2)
+            )
+            let text = distance
+            let bgColor = '#ffffff'
+            if (distance > threshold) {
+                text += ' (no match)'
+                bgColor = '#ce7575'
+            }
+            $('#distance').val(text)
+            $('#distance').css('background-color', bgColor)
+        }
+    </script>
+</body>
+</html>
